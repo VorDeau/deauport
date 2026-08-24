@@ -29,14 +29,14 @@ export const boards: readonly Board[] = [
     mainIc: "ESP32-C3",
     dimensions: "modular, main board + two sensor daughter boards",
     summary:
-      "Modular ESP32-C3 Mini-1 platform with detachable sensor boards, aimed at wearables but general enough for other embedded work. Archived in June 2026; the esp-rs firmware was planned but never written.",
+      "Modular ESP32-C3 Mini-1 platform with detachable sensor boards, aimed at wearables but general enough for other embedded work. Archived in June 2026.",
     highlights: [
       "Hot-swappable BMI160/270 and MPU9250 sensor boards",
       "Designed in KiCad 8, MIT licensed",
       "The only board here that was actually fabricated and assembled",
       "Archived read-only on 13 June 2026",
     ],
-    modelId: null,
+    modelId: "deltat32",
     repo: { url: "https://github.com/Kleavox/deltaT32", published: true },
   },
   {

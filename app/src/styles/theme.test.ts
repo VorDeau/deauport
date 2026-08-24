@@ -142,10 +142,10 @@ describe("motion law", () => {
 });
 
 const OFF_PALETTE_BUDGET: Record<string, number> = {
-  link: 72,
-  pass: 37,
-  pulse: 35,
-  web: 38,
+  link: 3,
+  pass: 0,
+  pulse: 0,
+  web: 0,
 };
 
 const APPS = resolve(HERE, "../../../../monorepo/apps");

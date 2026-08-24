@@ -25,7 +25,7 @@ const gltf = (args) =>
 const megabytes = (bytes) => (bytes / 1048576).toFixed(2);
 
 async function buildBoard(id, spec) {
-  const source = join(SOURCE_DIR, spec.source);
+  const source = spec.sourcePath ? resolve(spec.sourcePath) : join(SOURCE_DIR, spec.source);
   const original = await io.read(source);
   const before = boundingBoxes(original);
 
