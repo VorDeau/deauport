@@ -1,6 +1,5 @@
 node_modules/
 dist/
-.astro/
 .wrangler/
 .env
 .env.*
@@ -9,5 +8,9 @@ dist/
 *.tsbuildinfo
 .wrangler-deploy/
 .vscode/
-.idea/
 .DS_Store
+
+.superpowers/
+docs/
+
+node_modules/.cache/
