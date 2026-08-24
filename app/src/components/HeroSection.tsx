@@ -42,7 +42,7 @@ export default function HeroSection() {
             />
           )}
           {mode === "full" ? (
-            <ErrorBoundary key={boardId} fallback={<BoardFallback modelId={boardId} />}>
+            <ErrorBoundary resetKey={boardId} fallback={<BoardFallback modelId={boardId} />}>
               <Suspense fallback={<BoardFallback modelId={boardId} />}>
                 <HeroStage modelId={boardId} />
               </Suspense>

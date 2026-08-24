@@ -14,7 +14,7 @@ interface TurnstileRenderOptions {
   size?: "normal" | "compact";
   callback?: (token: string) => void;
   "expired-callback"?: () => void;
-  "error-callback"?: () => void;
+  "error-callback"?: (code?: string) => void;
 }
 
 interface TurnstileApi {

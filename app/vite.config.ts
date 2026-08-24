@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  envDir: "..",
   envPrefix: ["VITE_", "PUBLIC_"],
   build: {
     outDir: "dist",

@@ -1,13 +1,18 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
-export default class ErrorBoundary extends Component<
-  { fallback: ReactNode; children: ReactNode },
-  { failed: boolean }
-> {
-  override state = { failed: false };
+type Props = { fallback: ReactNode; children: ReactNode; resetKey?: string | number };
+type State = { failed: boolean; seen: string | number | undefined };
 
-  static getDerivedStateFromError(): { failed: boolean } {
+export default class ErrorBoundary extends Component<Props, State> {
+  override state: State = { failed: false, seen: undefined };
+
+  static getDerivedStateFromError(): Partial<State> {
     return { failed: true };
+  }
+
+  static getDerivedStateFromProps(props: Props, state: State): Partial<State> | null {
+    if (props.resetKey === state.seen) return null;
+    return { failed: false, seen: props.resetKey };
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {

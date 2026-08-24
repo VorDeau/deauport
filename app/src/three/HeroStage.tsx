@@ -4,7 +4,7 @@ import HeroBoard from "./HeroBoard";
 
 export default function HeroStage({ modelId }: { modelId: BoardModelId }) {
   return (
-    <BoardCanvas fitKey={modelId}>
+    <BoardCanvas autoFit={false}>
       <HeroBoard modelId={modelId} />
     </BoardCanvas>
   );

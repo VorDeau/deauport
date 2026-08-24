@@ -1,92 +1,132 @@
 import { describe, expect, it } from "vitest";
-import { Object3D, Vector3 } from "three";
-import { explodeOffset, resolveComponentName } from "./explode";
+import { Box3, Object3D, Vector3 } from "three";
+import { layerOffset, placementOf, resolveComponentName, separationOffset, slabOf } from "./explode";
 
 const boardCentre = new Vector3(0, 0, 0);
 
-describe("explodeOffset", () => {
-  it("tidak menggeser apa pun saat amount nol", () => {
-    const offset = explodeOffset(new Vector3(0.01, 0.002, 0), boardCentre, 0, 1);
-    expect(offset.length()).toBeCloseTo(0, 9);
+const slab = new Box3(new Vector3(-0.05, -0.0008, -0.03), new Vector3(0.05, 0.0008, 0.03));
+
+function boxAt(minY: number, maxY: number): Box3 {
+  return new Box3(new Vector3(0.01, minY, 0.01), new Vector3(0.02, maxY, 0.02));
+}
+
+describe("placementOf", () => {
+  it("menyebut komponen yang seluruhnya di atas papan sebagai top", () => {
+    expect(placementOf(boxAt(0.0008, 0.006), slab)).toBe("top");
   });
 
-  it("mendorong komponen menjauh dari pusat papan", () => {
-    const offset = explodeOffset(new Vector3(0.01, 0, 0), boardCentre, 1, 1);
-    expect(offset.x).toBeGreaterThan(0);
+  it("menyebut komponen yang seluruhnya di bawah papan sebagai bottom", () => {
+    expect(placementOf(boxAt(-0.006, -0.0008), slab)).toBe("bottom");
   });
 
-  it("mendorong ke arah berlawanan untuk sisi berlawanan", () => {
-    const right = explodeOffset(new Vector3(0.01, 0, 0), boardCentre, 1, 1);
-    const left = explodeOffset(new Vector3(-0.01, 0, 0), boardCentre, 1, 1);
-    expect(Math.sign(right.x)).toBe(-Math.sign(left.x));
+  it("menyebut konektor yang mengapit tepi papan sebagai edge", () => {
+    expect(placementOf(boxAt(-0.004, 0.004), slab)).toBe("edge");
   });
 
-  it("memisahkan sumbu Y lebih kuat supaya lapisan papan terurai", () => {
-    const above = explodeOffset(new Vector3(0, 0.001, 0), boardCentre, 1, 1);
-    const sideways = explodeOffset(new Vector3(0.001, 0, 0), boardCentre, 1, 1);
-    expect(Math.abs(above.y)).toBeGreaterThan(Math.abs(sideways.x));
-  });
-
-  it("berskala linier terhadap amount", () => {
-    const half = explodeOffset(new Vector3(0.01, 0, 0), boardCentre, 0.5, 1);
-    const full = explodeOffset(new Vector3(0.01, 0, 0), boardCentre, 1, 1);
-    expect(full.x).toBeCloseTo(half.x * 2, 9);
-  });
-
-  it("tidak menghasilkan NaN untuk komponen tepat di pusat", () => {
-    const offset = explodeOffset(boardCentre.clone(), boardCentre, 1, 1);
-    expect(Number.isNaN(offset.x)).toBe(false);
-    expect(Number.isNaN(offset.y)).toBe(false);
-  });
-
-  it("menghitung arah relatif terhadap pusat papan yang tidak nol", () => {
-    const offCentre = new Vector3(1, 2, 3);
-
-    const atBoardCentre = explodeOffset(offCentre.clone(), offCentre, 1, 1);
-    expect(atBoardCentre.x).toBeCloseTo(0, 9);
-    expect(atBoardCentre.z).toBeCloseTo(0, 9);
-    expect(Number.isNaN(atBoardCentre.y)).toBe(false);
-
-    const besideBoardCentre = explodeOffset(
-      offCentre.clone().add(new Vector3(0.01, 0, 0)),
-      offCentre,
-      1,
-      1,
-    );
-    expect(besideBoardCentre.x).toBeGreaterThan(0);
-    expect(besideBoardCentre.z).toBeCloseTo(0, 9);
+  it("menyebut komponen setipis papan sendiri sebagai edge, bukan menebak sisi", () => {
+    expect(placementOf(boxAt(-0.0006, 0.0006), slab)).toBe("edge");
   });
 });
 
-describe("explodeOffset menulis ke vektor yang diberikan", () => {
-  it("mengembalikan vektor keluaran itu sendiri, bukan alokasi baru", () => {
+describe("separationOffset", () => {
+  const centre = new Vector3(0.03, 0.002, 0.02);
+
+  it("tidak menggeser apa pun saat amount nol", () => {
+    expect(separationOffset("top", centre, boardCentre, 0.1, 0).length()).toBeCloseTo(0, 9);
+  });
+
+  it("mengangkat komponen sisi atas ke atas", () => {
+    expect(separationOffset("top", centre, boardCentre, 0.1, 1).y).toBeGreaterThan(0);
+  });
+
+  it("menurunkan komponen sisi bawah ke bawah", () => {
+    expect(separationOffset("bottom", centre, boardCentre, 0.1, 1).y).toBeLessThan(0);
+  });
+
+  it("tidak pernah menggeser komponen tepi secara vertikal", () => {
+    expect(separationOffset("edge", centre, boardCentre, 0.1, 1).y).toBe(0);
+  });
+
+  it("mendorong komponen tepi keluar menjauhi pusat papan", () => {
+    const out = separationOffset("edge", centre, boardCentre, 0.1, 1);
+    expect(Math.sign(out.x)).toBe(1);
+    expect(Math.sign(out.z)).toBe(1);
+  });
+
+  it("memberi komponen tepi jangkauan mendatar lebih jauh daripada komponen muka", () => {
+    const edge = separationOffset("edge", centre, boardCentre, 0.1, 1);
+    const face = separationOffset("top", centre, boardCentre, 0.1, 1);
+    expect(Math.hypot(edge.x, edge.z)).toBeGreaterThan(Math.hypot(face.x, face.z));
+  });
+
+  it("mengangkat lebih tinggi daripada menggeser, supaya tidak menabrak papan", () => {
+    const out = separationOffset("top", centre, boardCentre, 0.1, 1);
+    expect(Math.abs(out.y)).toBeGreaterThan(Math.hypot(out.x, out.z));
+  });
+
+  it("berskala linier terhadap amount", () => {
+    const half = separationOffset("top", centre, boardCentre, 0.1, 0.5);
+    const full = separationOffset("top", centre, boardCentre, 0.1, 1);
+    expect(full.y).toBeCloseTo(half.y * 2, 9);
+  });
+
+  it("menulis ke vektor yang diberikan dan mengembalikannya", () => {
     const out = new Vector3();
-    const result = explodeOffset(new Vector3(0.01, 0, 0), boardCentre, 1, 1, out);
-    expect(result).toBe(out);
+    expect(separationOffset("top", centre, boardCentre, 0.1, 1, out)).toBe(out);
   });
 
-  it("memberi hasil yang sama dengan versi yang mengalokasi sendiri", () => {
-    const centre = new Vector3(0.01, 0.002, -0.003);
-    const board = new Vector3(0.001, 0, 0.001);
-    const fresh = explodeOffset(centre, board, 0.7, 0.5);
-    const reused = explodeOffset(centre, board, 0.7, 0.5, new Vector3(9, 9, 9));
-    expect([reused.x, reused.y, reused.z]).toEqual([fresh.x, fresh.y, fresh.z]);
+  it("tidak menghasilkan NaN untuk komponen tepat di pusat papan", () => {
+    const out = separationOffset("top", boardCentre.clone(), boardCentre, 0.1, 1);
+    expect(Number.isNaN(out.x)).toBe(false);
+    expect(Number.isNaN(out.y)).toBe(false);
+  });
+});
+
+describe("layerOffset", () => {
+  it("mengangkat lurus ke atas tanpa geser mendatar", () => {
+    const out = layerOffset("top", 0.1, 1);
+    expect(out.x).toBe(0);
+    expect(out.z).toBe(0);
+    expect(out.y).toBeGreaterThan(0);
   });
 
-  it("tidak membawa sisa hitungan sebelumnya saat vektor gores dipakai ulang", () => {
-    const scratch = new Vector3();
-    const right = explodeOffset(new Vector3(0.01, 0, 0), boardCentre, 1, 1, scratch).clone();
-    const left = explodeOffset(new Vector3(-0.01, 0, 0), boardCentre, 1, 1, scratch).clone();
-    expect(Math.sign(right.x)).toBe(-Math.sign(left.x));
-    expect(Math.abs(right.x)).toBeCloseTo(Math.abs(left.x), 9);
+  it("menurunkan komponen sisi bawah", () => {
+    expect(layerOffset("bottom", 0.1, 1).y).toBeLessThan(0);
   });
 
-  it("tidak meninggalkan NaN di vektor gores untuk komponen di pusat", () => {
-    const scratch = new Vector3(5, 5, 5);
-    const result = explodeOffset(boardCentre.clone(), boardCentre, 1, 1, scratch);
-    expect(Number.isNaN(result.x)).toBe(false);
-    expect(result.x).toBeCloseTo(0, 9);
-    expect(result.z).toBeCloseTo(0, 9);
+  it("memberi jarak yang sama untuk setiap anggota, jadi mereka naik sebagai satu lapisan", () => {
+    const first = layerOffset("top", 0.1, 1).clone();
+    const second = layerOffset("top", 0.1, 1);
+    expect(second.y).toBe(first.y);
+  });
+
+  it("tidak menggeser apa pun saat amount nol", () => {
+    expect(layerOffset("top", 0.1, 0).length()).toBe(0);
+  });
+
+  it("memperlakukan komponen tepi seperti sisi atas, bukan membiarkannya diam", () => {
+    expect(layerOffset("edge", 0.1, 1).y).toBeGreaterThan(0);
+  });
+});
+
+describe("slabOf", () => {
+  it("memakai node lapisan papan saat ada", () => {
+    const scene = new Object3D();
+    const layer = new Object3D();
+    layer.name = "Keel_PCB_Top";
+    scene.add(layer);
+    expect(slabOf(scene, ["Keel_PCB_Top"])).toBeInstanceOf(Box3);
+  });
+
+  it("jatuh ke irisan tipis di tengah saat tidak ada lapisan dikenali", () => {
+    const scene = new Object3D();
+    const child = new Object3D();
+    child.name = "U1";
+    scene.add(child);
+    child.position.set(0, 0.01, 0);
+    const fallback = slabOf(scene, ["tidak-ada"]);
+    expect(fallback.max.y).toBeGreaterThanOrEqual(fallback.min.y);
+    expect(Number.isFinite(fallback.min.y)).toBe(true);
   });
 });
 

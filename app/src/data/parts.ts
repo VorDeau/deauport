@@ -6,7 +6,8 @@ export type PartGroup =
   | "sensing"
   | "protection"
   | "interface"
-  | "mechanical";
+  | "mechanical"
+  | "passive";
 
 export type PartNote = {
   ref: string;
@@ -25,6 +26,7 @@ export const GROUP_STYLE: Record<
   protection: { pad: "bg-danger", text: "text-danger", wash: "kvx-wash-protection" },
   interface: { pad: "bg-quiet", text: "text-quiet", wash: "kvx-wash-interface" },
   mechanical: { pad: "bg-mech", text: "text-mech", wash: "kvx-wash-mechanical" },
+  passive: { pad: "bg-quiet", text: "text-quiet", wash: "kvx-wash-passive" },
 };
 
 export const BOARD_PARTS: Record<BoardModelId, readonly PartNote[]> = {

@@ -147,6 +147,10 @@ body {
     background-color: color-mix(in srgb, var(--color-mech) 10%, transparent);
   }
 
+  .kvx-wash-passive {
+    background-color: color-mix(in srgb, var(--color-quiet) 10%, transparent);
+  }
+
   .kvx-control {
     min-height: 48px;
     border: 1px solid var(--color-line-control);
