@@ -54,7 +54,7 @@ function CalloutProjector({
 function Scene({
   modelId,
   progress,
-  order,
+  groups,
   hidden,
   onHover,
   callouts,
@@ -62,7 +62,7 @@ function Scene({
 }: {
   modelId: BoardModelId;
   progress: RefObject<number>;
-  order: readonly string[];
+  groups: readonly (readonly string[])[];
   hidden: ReadonlySet<string>;
   onHover: (name: string | null) => void;
   callouts: readonly string[];
@@ -78,7 +78,8 @@ function Scene({
       <ExplodeRig
         scene={scene}
         components={movable}
-        order={order}
+        layers={BOARD_MODELS[modelId].layers}
+        groups={groups}
         hiddenLayers={hidden}
         progress={progress}
         onHover={onHover}
@@ -91,16 +92,16 @@ function Scene({
 export default function ExplodedBoard({
   modelId,
   progress,
-  order,
+  groups,
   hidden,
-  parts,
+  labels,
   activeRef,
 }: {
   modelId: BoardModelId;
   progress: RefObject<number>;
-  order: readonly string[];
+  groups: readonly (readonly string[])[];
   hidden: ReadonlySet<string>;
-  parts: readonly PartNote[];
+  labels: readonly { note: PartNote; anchor: string }[];
   activeRef: string | null;
 }) {
   const [hovered, setHovered] = useState<string | null>(null);
@@ -109,7 +110,7 @@ export default function ExplodedBoard({
   const anchorRefs = useRef<(HTMLElement | null)[]>([]);
   const anchors = useRef<{ x: number; y: number }[]>([]);
 
-  const refs = useMemo(() => parts.map((p) => p.ref), [parts]);
+  const refs = useMemo(() => labels.map((label) => label.anchor), [labels]);
 
   const measureAnchors = useCallback(() => {
     const stage = stageRef.current;
@@ -132,9 +133,9 @@ export default function ExplodedBoard({
     const observer = new ResizeObserver(measureAnchors);
     observer.observe(stage);
     return () => observer.disconnect();
-  }, [measureAnchors, parts]);
+  }, [measureAnchors, labels]);
 
-  const activeIndex = parts.findIndex((part) => part.ref === activeRef);
+  const activeIndex = labels.findIndex((label) => label.note.ref === activeRef);
 
   const handleProject = useCallback((points: readonly Projected[]) => {
     for (let i = 0; i < points.length; i += 1) {
@@ -155,17 +156,17 @@ export default function ExplodedBoard({
   }, []);
 
   const columns = [
-    parts.filter((_, index) => index % 2 === 0),
-    parts.filter((_, index) => index % 2 === 1),
+    labels.filter((_, index) => index % 2 === 0),
+    labels.filter((_, index) => index % 2 === 1),
   ];
 
   return (
     <div ref={stageRef} className="relative h-full w-full">
-      <BoardCanvas fitKey={modelId} steady controls={false} margin={1.65}>
+      <BoardCanvas fitKey={modelId} steady controls={false} margin={1.72}>
         <Scene
           modelId={modelId}
           progress={progress}
-          order={order}
+          groups={groups}
           hidden={hidden}
           onHover={setHovered}
           callouts={refs}
@@ -178,9 +179,9 @@ export default function ExplodedBoard({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 hidden h-full w-full sm:block"
       >
-        {parts.map((part, index) => (
+        {labels.map((label, index) => (
           <line
-            key={part.ref}
+            key={label.note.ref}
             ref={(element) => {
               lineRefs.current[index] = element;
             }}
@@ -201,8 +202,9 @@ export default function ExplodedBoard({
               : "right-6 top-24 [&>li]:flex-row-reverse"
           }`}
         >
-          {column.map((part) => {
-            const index = parts.indexOf(part);
+          {column.map((label) => {
+            const part = label.note;
+            const index = labels.indexOf(label);
             return (
               <li
                 key={part.ref}

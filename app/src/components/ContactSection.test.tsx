@@ -86,4 +86,51 @@ describe("ContactSection", () => {
     await fillForm();
     expect(await screen.findByText(/rate limited/i)).toBeInTheDocument();
   });
+
+  it("jatuh ke kunci uji saat sitekey terpasang tapi kosong", async () => {
+    vi.stubEnv("PUBLIC_TURNSTILE_SITE_KEY", "   ");
+    const seen: TurnstileRenderOptions[] = [];
+    const renderWidget = vi.fn((_container: HTMLElement, options: TurnstileRenderOptions) => {
+      seen.push(options);
+      return "widget-1";
+    });
+    window.turnstile = { render: renderWidget, reset: vi.fn(), remove: vi.fn() };
+
+    render(<ContactSection />);
+    await waitFor(() => expect(renderWidget).toHaveBeenCalled());
+
+    const options = seen[0];
+    if (!options) throw new Error("widget tidak pernah dirender");
+    expect(options.sitekey).toBe("1x00000000000000000000AA");
+    vi.unstubAllEnvs();
+  });
+
+  it("memakai sitekey nyata saat tersedia", async () => {
+    vi.stubEnv("PUBLIC_TURNSTILE_SITE_KEY", "0xREALKEY");
+    const seen: TurnstileRenderOptions[] = [];
+    const renderWidget = vi.fn((_container: HTMLElement, options: TurnstileRenderOptions) => {
+      seen.push(options);
+      return "widget-1";
+    });
+    window.turnstile = { render: renderWidget, reset: vi.fn(), remove: vi.fn() };
+
+    render(<ContactSection />);
+    await waitFor(() => expect(renderWidget).toHaveBeenCalled());
+
+    const options = seen[0];
+    if (!options) throw new Error("widget tidak pernah dirender");
+    expect(options.sitekey).toBe("0xREALKEY");
+    vi.unstubAllEnvs();
+  });
+
+  it("mengatakan kode errornya saat widget gagal, bukan diam", async () => {
+    const renderWidget = vi.fn((_c: HTMLElement, options: TurnstileRenderOptions) => {
+      options["error-callback"]?.("110200");
+      return "widget-1";
+    });
+    window.turnstile = { render: renderWidget, reset: vi.fn(), remove: vi.fn() };
+
+    render(<ContactSection />);
+    expect(await screen.findByText(/110200/)).toBeInTheDocument();
+  });
 });

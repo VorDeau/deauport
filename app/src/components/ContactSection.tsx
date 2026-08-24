@@ -25,17 +25,30 @@ export default function ContactSection({ testToken }: { testToken?: string }) {
       if (cancelled) return;
       const api = window.turnstile;
       if (!api) {
-        if (++attempts > POLL_ATTEMPTS) return;
+        if (++attempts > POLL_ATTEMPTS) {
+          setStatus({
+            kind: "error",
+            message: "Verification did not load. The form cannot send until it does.",
+          });
+          return;
+        }
         timer = setTimeout(mount, POLL_MS);
         return;
       }
+      const configured = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY?.trim();
       widgetIdRef.current = api.render(container, {
-        sitekey: import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? TEST_SITE_KEY,
+        sitekey: configured || TEST_SITE_KEY,
         theme: "dark",
         size: window.matchMedia("(max-width: 22rem)").matches ? "compact" : "normal",
         callback: (value) => setToken(value),
         "expired-callback": () => setToken(""),
-        "error-callback": () => setToken(""),
+        "error-callback": (code) => {
+          setToken("");
+          setStatus({
+            kind: "error",
+            message: `Verification failed to load (${code ?? "no code"}). The form cannot send until it does.`,
+          });
+        },
       });
     };
     mount();

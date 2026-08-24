@@ -1,15 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
   <title>kleavox</title>
-  <!-- The kleavox mark, the same one link, pass, pulse and web already carry.
-       A favicon names the site, and this site holds both the hardware and the
-       software; deltaT is only the hardware line, so its mark would overclaim
-       here. It also would not survive: at 16px the t carved inside the delta
-       renders 1.07px wide and the via 0.85px, so the one part of that mark
-       that carries its meaning turns into a solid triangle.
-
-       The ground is --color-base rather than the monorepo's #070810. Both read
-       as black; that one is blue-cast and this palette is green-cast, and the
-       lime is already identical on both sides. -->
   <rect width="32" height="32" rx="8" fill="#070908" />
   <path d="M9 9l7 7-7 7" fill="none" stroke="#a3e635" stroke-opacity="0.4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
   <path d="M16 9l7 7-7 7" fill="none" stroke="#a3e635" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />

@@ -12,12 +12,14 @@ export default function BoardCanvas({
   fitKey,
   steady = false,
   margin,
+  autoFit = true,
 }: {
   children: ReactNode;
   controls?: boolean;
   margin?: number;
   fitKey?: string | number;
   steady?: boolean;
+  autoFit?: boolean;
 }) {
   return (
     <Canvas
@@ -36,15 +38,19 @@ export default function BoardCanvas({
       </Environment>
 
       <Suspense fallback={null}>
-        <FramedStage
-          intensity={0}
-          environment={null}
-          adjustCamera
-          margin={margin}
-          center={{ cacheKey: fitKey, disable: steady }}
-        >
-          {children}
-        </FramedStage>
+        {autoFit ? (
+          <FramedStage
+            intensity={0}
+            environment={null}
+            adjustCamera
+            margin={margin}
+            center={{ cacheKey: fitKey, disable: steady }}
+          >
+            {children}
+          </FramedStage>
+        ) : (
+          children
+        )}
       </Suspense>
       {controls && (
         <OrbitControls enablePan={false} enableZoom={false} enableRotate makeDefault />

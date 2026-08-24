@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BoardModelId } from "../data/models.generated";
 import { GROUP_STYLE } from "../data/parts";
 import ExplodedBoard from "./ExplodedBoard";
-import { beatsFor, locate, revealOrder, trackHeightVh } from "./reveal";
+import { beatsFor, locate, movingGroups, trackHeightVh } from "./reveal";
 import { useScrollProgress } from "./useScrollProgress";
 
 const TICKS = 56;
@@ -11,7 +11,7 @@ const SETTLE_MS = 600;
 
 export default function BoardViewer({ modelId }: { modelId: BoardModelId }) {
   const beats = useMemo(() => beatsFor(modelId), [modelId]);
-  const order = useMemo(() => revealOrder(beats), [beats]);
+  const groups = useMemo(() => movingGroups(beats), [beats]);
 
   const trackRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<HTMLDivElement>(null);
@@ -49,7 +49,9 @@ export default function BoardViewer({ modelId }: { modelId: BoardModelId }) {
   if (!beat) return null;
 
   const tone = GROUP_STYLE[beat.group];
-  const labelled = beats.slice(beat.groupStart, beatIndex + 1).map((entry) => entry.part);
+  const labelled = beats
+    .slice(beat.groupStart, beatIndex + 1)
+    .map((entry) => ({ note: entry.part, anchor: entry.anchor }));
 
   return (
     <div
@@ -64,9 +66,9 @@ export default function BoardViewer({ modelId }: { modelId: BoardModelId }) {
           <ExplodedBoard
             modelId={modelId}
             progress={progress}
-            order={order}
+            groups={groups}
             hidden={EMPTY}
-            parts={labelled}
+            labels={labelled}
             activeRef={beat.part.ref}
           />
         </div>

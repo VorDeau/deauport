@@ -1,33 +1,39 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Sphere, type Object3D } from "three";
+import { Sphere, Vector3, type Group } from "three";
 import type { BoardModelId } from "../data/models.generated";
 import { HERO_ORDER } from "./heroBoards";
 import { preloadBoard, useBoardModel } from "./useBoardModel";
 
-const SETTLE_SECONDS = 0.64;
+const SETTLE_SECONDS = 0.9;
 
-const SETTLE_FROM = -0.38;
+const SETTLE_FROM = -0.3;
 
-const FRAME_RADIUS = 0.05;
+const SETTLE_SCALE = 0.93;
 
-function expoOut(t: number): number {
-  return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
+const FRAME_RADIUS = 0.058;
+
+function smootherstep(t: number): number {
+  return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
 function SettlingBoard({ modelId }: { modelId: BoardModelId }) {
   const { scene, bounds } = useBoardModel(modelId);
-  const scale = useMemo(() => {
+  const fit = useMemo(() => {
     const radius = bounds.getBoundingSphere(new Sphere()).radius;
-    return radius > 0 ? FRAME_RADIUS / radius : 1;
+    const scale = radius > 0 ? FRAME_RADIUS / radius : 1;
+    const centre = bounds.getCenter(new Vector3()).multiplyScalar(-scale);
+    return { scale, centre };
   }, [bounds]);
-  const ref = useRef<Object3D>(null);
+  const scale = fit.scale;
+  const ref = useRef<Group>(null);
   const startedAt = useRef<number | null>(null);
   const settled = useRef(false);
   const shown = useRef(modelId);
 
   useFrame((state) => {
-    if (!ref.current) return;
+    const node = ref.current;
+    if (!node) return;
 
     if (shown.current !== modelId) {
       shown.current = modelId;
@@ -40,15 +46,29 @@ function SettlingBoard({ modelId }: { modelId: BoardModelId }) {
 
     const elapsed = state.clock.elapsedTime - startedAt.current;
     const t = Math.min(1, elapsed / SETTLE_SECONDS);
-    ref.current.rotation.y = SETTLE_FROM * (1 - expoOut(t));
+    const eased = smootherstep(t);
+
+    node.rotation.y = SETTLE_FROM * (1 - eased);
+    node.scale.setScalar(SETTLE_SCALE + (1 - SETTLE_SCALE) * eased);
 
     if (t >= 1) {
-      ref.current.rotation.y = 0;
+      node.rotation.y = 0;
+      node.scale.setScalar(1);
       settled.current = true;
     }
   });
 
-  return <primitive key={modelId} ref={ref} object={scene} scale={scale} dispose={null} />;
+  return (
+    <group ref={ref}>
+      <primitive
+        key={modelId}
+        object={scene}
+        scale={scale}
+        position={[fit.centre.x, fit.centre.y, fit.centre.z]}
+        dispose={null}
+      />
+    </group>
+  );
 }
 
 export default function HeroBoard({ modelId }: { modelId: BoardModelId }) {

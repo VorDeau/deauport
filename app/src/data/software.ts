@@ -3,7 +3,7 @@ import type { SoftwareProject } from "./types";
 export const softwareProjects: readonly SoftwareProject[] = [
   {
     slug: "kleavox-monorepo",
-    name: "Kleavox monorepo",
+    name: "Kleavox Monorepo",
     status: "active",
     summary:
       "A Cloudflare-first ecosystem: identity, short routes, temporary file delivery, and infrastructure monitoring, all on one edge runtime.",
@@ -31,11 +31,11 @@ export const softwareProjects: readonly SoftwareProject[] = [
   },
   {
     slug: "portfolio",
-    name: "This portfolio",
+    name: "This Portfolio",
     status: "active",
     summary:
       "The site you are reading. Board models come straight out of KiCad and are compressed roughly tenfold without losing a single component name.",
     stack: ["Vite", "React", "TypeScript", "Tailwind v4", "three.js", "Workers"],
-    repo: { url: "https://github.com/Kleavox/deauport", published: false },
+    repo: { url: "https://github.com/Kleavox/portfolio", published: true },
   },
 ];
