@@ -17,7 +17,7 @@ describe("boards", () => {
     const mapping = Object.fromEntries(boards.map((b) => [b.slug, b.modelId]));
     expect(mapping).toEqual({
       keel: "keel",
-      deltat32: null,
+      deltat32: "deltat32",
       fides: "fides",
       interim: "interim",
       paritas: null,
@@ -25,14 +25,13 @@ describe("boards", () => {
   });
 
   it("setiap modelId non-null ada di BOARD_MODELS", () => {
-    const withModels = boards.filter((b) => b.modelId !== null);
-    expect(withModels).toHaveLength(3);
-    for (const board of withModels) {
-      const modelId = board.modelId;
-      if (modelId) {
-        expect(BOARD_MODELS[modelId]).toBeDefined();
-      }
-    }
+    const used = boards.map((b) => b.modelId).filter((id) => id !== null);
+    expect(used.length).toBeGreaterThan(0);
+    for (const modelId of used) expect(BOARD_MODELS[modelId]).toBeDefined();
+
+    // Every built model belongs to exactly one board: a model nothing points at
+    // is dead weight in the bundle, and two boards sharing one is a copy-paste.
+    expect([...used].sort()).toEqual(Object.keys(BOARD_MODELS).sort());
   });
 
   it("setiap successorOf menunjuk slug yang ada", () => {

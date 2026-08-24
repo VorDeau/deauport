@@ -10,6 +10,10 @@ const SOURCES = {
   keel: "D:/Project/Keel/hardware/deltaT26.kicad_pcb",
   fides: "D:/Project/Fides/hardware/deltaT35.kicad_pcb",
   interim: "D:/Project/Interim/DeltaT52/DeltaT52.kicad_pcb",
+  deltat32: [
+    "D:/Project/DeltaT32/Hardwares/esp-unit-c3-v3/esp-unit-c3-v3.kicad_pcb",
+    "D:/Project/DeltaT32/Hardwares/sensor-bmi-v2/sensor-bmi-v2.kicad_pcb",
+  ],
 };
 
 const FANOUT_LIMIT = 8;
@@ -164,12 +168,16 @@ const round = (n) => Math.round(n * 100) / 100;
 const boards = {};
 const missing = [];
 
-for (const [id, file] of Object.entries(SOURCES)) {
-  if (!existsSync(file)) {
-    missing.push(`${id}: ${file}`);
+for (const [id, entry] of Object.entries(SOURCES)) {
+  // deltaT32 is one model built from two boards, so its netlist is the union of
+  // both. Their designators are numbered apart, so nothing collides.
+  const files = Array.isArray(entry) ? entry : [entry];
+  const absent = files.filter((file) => !existsSync(file));
+  if (absent.length > 0) {
+    missing.push(`${id}: ${absent.join(", ")}`);
     continue;
   }
-  const parts = parseBoard(file);
+  const parts = files.flatMap((file) => parseBoard(file));
   const icCount = parts.filter((part) => kindOf(part.ref) === "ic").length;
   const netted = parts.filter((part) => part.nets.size > 0).length;
   if (icCount === 0 || netted === 0) {
