@@ -16,7 +16,8 @@
     "models:build": "node scripts/build-models.mjs",
     "budget:check": "node scripts/check-budget.mjs",
     "deploy:render": "node scripts/render-deploy.mjs",
-    "models:clusters": "node scripts/build-clusters.mjs"
+    "models:clusters": "node scripts/build-clusters.mjs",
+    "models:deltat32": "node scripts/build-deltat32.mjs"
   },
   "devDependencies": {
     "@gltf-transform/cli": "4.4.2",
