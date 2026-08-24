@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#070908" />
+    <title>Hafidh Musyafa · hardware and systems</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- No SRI: Cloudflare serves this Turnstile endpoint unversioned and
+         changes its contents whenever they deploy, so a hard-coded integrity=
+         would start blocking the script and silently kill the contact form.
+         This is the same script the old Astro site used.
+
+         ?render=explicit because this is an SPA. The implicit mode scans the
+         DOM for .cf-turnstile once at script load, which this page loses twice
+         over: React commits after the deferred module script runs, and any
+         client-side navigation remounts the container afterwards. The widget
+         is rendered from ContactSection instead. -->
+    <script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+      async
+      defer
+    ></script>
+  </body>
+</html>

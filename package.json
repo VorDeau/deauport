@@ -7,10 +7,23 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "build": "pnpm --filter @portfolio/app build && pnpm --filter @portfolio/worker build",
+    "build": "pnpm test && pnpm --filter @portfolio/app build && pnpm --filter @portfolio/worker build && pnpm budget:check",
     "dev": "pnpm --filter @portfolio/worker dev",
     "lint": "pnpm --filter @portfolio/app lint && pnpm --filter @portfolio/worker lint",
     "typecheck": "pnpm --filter @portfolio/app typecheck && pnpm --filter @portfolio/worker typecheck",
+    "test": "vitest run && pnpm --filter @portfolio/app test",
+    "test:watch": "vitest",
+    "models:build": "node scripts/build-models.mjs",
+    "budget:check": "node scripts/check-budget.mjs",
     "deploy:render": "node scripts/render-deploy.mjs"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "4.4.2",
+    "@gltf-transform/core": "4.4.2",
+    "@gltf-transform/extensions": "4.4.2",
+    "@gltf-transform/functions": "4.4.2",
+    "gl-matrix": "3.4.4",
+    "meshoptimizer": "1.2.0",
+    "vitest": "4.1.10"
   }
 }
